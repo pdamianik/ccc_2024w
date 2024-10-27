@@ -1,70 +1,64 @@
-use std::{iter, str::FromStr};
-
+use crate::input::{CountedInput, FromLines, Subtask};
+use eyre::{eyre, WrapErr};
 use itertools::Itertools;
+use std::str::Lines;
+use std::iter;
 
-struct Input {
-    count: usize,
-    rooms: Vec<Room>,
-}
-
-impl FromStr for Input {
-    type Err = eyre::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut lines = s.lines();
-        let first_line = lines.next().ok_or(eyre::eyre!("No first count line"))?;
-        let count = first_line.parse()?;
-        let rooms = lines.map(Room::from_str).collect::<Result<Vec<_>, _>>()?;
-
-        Ok(Input { count, rooms })
-    }
-}
-
-struct Room {
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub struct Room {
     width: usize,
     height: usize,
     desk_count: usize,
 }
 
-impl FromStr for Room {
-    type Err = eyre::Error;
+impl Subtask for Room {}
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut values = s.split(" ");
-        let width = values.next().ok_or(eyre::eyre!("Invalid width"))?;
-        let height = values.next().ok_or(eyre::eyre!("Invalid height"))?;
-        let desk_count = values.next().ok_or(eyre::eyre!("Invalid desk count"))?;
+impl FromLines for Room {
+    fn from_lines(lines: &mut Lines) -> Result<Self, eyre::Report> {
+        let line = lines.next().ok_or(eyre!("No line available to parse"))?;
+        let mut values = line.split(" ");
+        let width = values.next().ok_or(eyre!("Missing width"))?;
+        let height = values.next().ok_or(eyre!("Missing height"))?;
+        let desk_count = values.next().ok_or(eyre!("Missing desk count"))?;
 
         Ok(Room {
-            width: width.parse()?,
-            height: height.parse()?,
-            desk_count: desk_count.parse()?,
+            width: width.parse().wrap_err("Invalid width")?,
+            height: height.parse().wrap_err("Invalid height")?,
+            desk_count: desk_count.parse().wrap_err("Invalid desk count")?,
         })
     }
 }
 
-pub fn run(input: &'static str) -> eyre::Result<String> {
-    let input: Input = input.parse()?;
+pub type Input = CountedInput<Room>;
 
-    let mut result = Vec::new();
-
-    for room in input.rooms {
-        let mut id = 1;
-        let mut room_result = String::new();
-        for _ in 0..room.height {
-            let mut row = Vec::new();
-            for _ in 0..room.width/3 {
-                // build table
-                let table = iter::repeat(id).take(3).join(" ");
-                row.push(table);
-                id += 1;
-            }
-            room_result.push_str(&format!("{}\r\n", row.join(" ")));
+pub fn map(room: &Room) -> eyre::Result<String> {
+    let mut id = 1;
+    let mut room_result = Vec::new();
+    for _ in 0..room.height {
+        let mut row = Vec::new();
+        for _ in 0..room.width/3 {
+            // build table
+            let table = iter::repeat(id).take(3).join(" ");
+            row.push(table);
+            id += 1;
         }
-
-        result.push(room_result);
+        room_result.push(row.join(" "));
     }
 
+    let mut result = room_result.join("\r\n");
+    result.push_str("\r\n");
+    Ok(result)
+}
 
-    Ok(result.into_iter().join("\r\n"))
+pub fn reduce(results: Vec<String>) -> String {
+    results.into_iter().join("\r\n")
+}
+
+pub fn verify(input: &Room, output: &str) -> eyre::Result<()> {
+    Ok(())
+}
+
+#[cfg(test)]
+pub fn split_example(input: &str) -> impl Iterator<Item = &str> {
+    input.split("\r\n\r\n")
 }

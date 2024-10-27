@@ -14,6 +14,10 @@ fn main() -> eyre::Result<()> {
     if let Err(mut error) = levels::run_level1() {
         errors.append(&mut error)
     }
+    if let Err(mut error) = levels::run_level2() {
+        errors.append(&mut error)
+    }
+
     if errors.len() == 0 {
         Ok(())
     } else {
