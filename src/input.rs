@@ -44,7 +44,7 @@ impl<TSubtask: Subtask> FromStr for CountedInput<TSubtask> {
         let mut lines = s.lines();
         let first_line = lines.next().ok_or(eyre!("No first count line"))?;
         let count = first_line.parse().context("Failed to parse count from first input line")?;
-        let mut tasks = Vec::new();
+        let mut tasks = Vec::with_capacity(count);
 
         for _ in 0..count {
             tasks.push(TSubtask::from_lines(&mut lines)?);
