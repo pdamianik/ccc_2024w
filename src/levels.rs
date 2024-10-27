@@ -185,6 +185,9 @@ macro_rules! levels {
             )*
         }
     };
+    ($($level:ident($name:literal, $number:literal, [$($task:literal),*]))*) => {
+        levels!($($level($name, $number, [$($task,)*]))*);
+    };
 }
 
 levels!(
