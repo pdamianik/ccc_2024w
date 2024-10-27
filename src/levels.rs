@@ -48,11 +48,25 @@ macro_rules! tests {
     };
     ($level:ident($name:literal, $number:literal, [$($task:literal,)*])) => {
         pub mod $level {
+            use super::*;
+            const TASKS: [&str; count!($($task)*)] = [$($task,)*];
+
+            #[test]
+            pub fn test_example() {
+                let raw = &RAW_INPUTS[$number - 1];
+
+                let result = $level(raw.example_in).unwrap();
+                assert_eq!(raw.example_out, result);
+            }
+
             $(
                 ::concat_idents::concat_idents!(fn_name = test_, $level, _, $task {
                     #[test]
                     pub fn fn_name() {
-                        // TODO: write test function
+                        let task = TASKS.iter().position(|task| *task == $task).unwrap();
+                        let raw_input = RAW_INPUTS[$number - 1].tasks[task];
+
+                        $level(raw_input).unwrap();
                     }
                 });
             )*
