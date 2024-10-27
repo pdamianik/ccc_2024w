@@ -1,4 +1,4 @@
-use crate::input::Input;
+use crate::input::{Input, Inputs};
 use eyre::{WrapErr, Report};
 
 macro_rules! include_tasks {
@@ -25,7 +25,7 @@ macro_rules! include_inputs {
         include_inputs!($level => [$($task,)*])
     };
     ($level: literal => [$($task:literal,)*]) => {
-        crate::input::Inputs {
+        Inputs {
             example_in: include_tasks!(concat!(::location_macros::workspace_dir!(), "/inputs/", $level) => "example.in"),
             example_out: include_tasks!(concat!(::location_macros::workspace_dir!(), "/inputs/", $level) => "example.out"),
             tasks: include_tasks!(concat!(::location_macros::workspace_dir!(), "/inputs/", $level) => [$(concat!($task, ".in"),)*]),
@@ -52,11 +52,27 @@ macro_rules! tests {
             const TASKS: [&str; count!($($task)*)] = [$($task,)*];
 
             #[test]
+            pub fn test_verify() {
+                let Inputs { example_in, example_out, ..} = &RAW_INPUTS[$number - 1];
+                let input: crate::levels::$level::Input = example_in.parse()
+                    .wrap_err("Failed to parse example input")
+                    .unwrap();
+                let io_pairs = ::std::iter::zip(
+                    input.subtasks(),
+                    crate::levels::$level::split_example(example_out)
+                );
+                for (input, output) in io_pairs {
+                    crate::levels::$level::verify(input, output)
+                        .wrap_err(::eyre::eyre!("Failed to verify example output {output:?} for example input {input:?}"))
+                        .unwrap();
+                }
+            }
+
+            #[test]
             pub fn test_example() {
                 let raw = &RAW_INPUTS[$number - 1];
 
-                let result = $level(raw.example_in).unwrap();
-                assert_eq!(raw.example_out, result);
+                let _ = $level(raw.example_in).unwrap();
             }
 
             $(
@@ -91,7 +107,7 @@ macro_rules! levels {
                     let result = $level::map(input)
                         .wrap_err("Failed to map input to output")
                         .and_then(|result| {
-                            $level::verify(input, &result)
+                            $level::verify(&input, &result)
                                 .map(|_| result)
                         })
                         .wrap_err("Verification failed");
@@ -173,6 +189,6 @@ macro_rules! levels {
 
 levels!(
     level1("level1", 1, [])
-    // level2("level2", 2)
+    level2("level2", 2, [])
 );
 

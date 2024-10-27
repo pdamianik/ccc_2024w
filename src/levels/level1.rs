@@ -13,9 +13,9 @@ impl Subtask for Room { }
 
 impl FromLines for Room {
     fn from_lines(lines: &mut Lines) -> eyre::Result<Self> {
-        let s = lines.next().ok_or(eyre!("No line available to parse"))?;
+        let line = lines.next().ok_or(eyre!("No line available to parse"))?;
 
-        let (width, height) = s.split(" ").next_tuple().ok_or(eyre!("Room line does not contain a tuple"))?;
+        let (width, height) = line.split(" ").next_tuple().ok_or(eyre!("Room line does not contain a tuple"))?;
 
         Ok(Room {
             width: width.parse().wrap_err("Failed to parse room width")?,
@@ -42,4 +42,9 @@ pub fn verify(_input: &Room, output: &str) -> eyre::Result<()> {
     output.parse::<usize>()
         .map(|_| ())
         .map_err(|_| eyre!("Output is not an usize"))
+}
+
+#[cfg(test)]
+pub fn split_example(input: &str) -> impl Iterator<Item=&str> {
+    input.lines().filter(|line| !line.trim().is_empty())
 }

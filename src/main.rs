@@ -9,13 +9,18 @@ fn main() -> eyre::Result<()> {
 
     std::fs::create_dir_all("out").wrap_err("Can not create 'out' directory")?;
 
-    let result = levels::run_level1();
+    let mut errors = Vec::new();
 
-    result.map_err(|errors| {
+    if let Err(mut error) = levels::run_level1() {
+        errors.append(&mut error)
+    }
+    if errors.len() == 0 {
+        Ok(())
+    } else {
         let error_count = errors.len();
         let first_error = errors.into_iter().next().unwrap();
-        first_error.section(format!("And {} more errors", error_count - 1))
-    })
+        Err(first_error.section(format!("And {} more errors", error_count - 1)))
+    }
 }
 
 // mod test {
