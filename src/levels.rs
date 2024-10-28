@@ -63,7 +63,7 @@ macro_rules! tests {
                 );
                 for (input, output) in io_pairs {
                     crate::levels::$level::verify(input, output)
-                        .wrap_err(::eyre::eyre!("Failed to verify example output {output:?} for example input {input:?}"))
+                        .wrap_err(::eyre::eyre!("Failed to verify example for input {input:?}"))
                         .unwrap();
                 }
             }
